@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Web Modeler" exporterVersion="b05b990" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.7.0">
+  <bpmn:process id="Process_1uyo2lq" name="Private Lending Lifecycle" isExecutable="true">
+    <bpmn:extensionElements>
+      <zeebe:versionTag value="1.0" />
+    </bpmn:extensionElements>
+    <bpmn:startEvent id="StartEvent_1" name="Loan application received">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Gateway_1" />
+    <bpmn:exclusiveGateway id="Gateway_1" name="Loan type?">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_2" name="Mortgage" sourceRef="Gateway_1" targetRef="Activity_MortgageOrigination" />
+    <bpmn:sequenceFlow id="Flow_3" name="Consumer Loan" sourceRef="Gateway_1" targetRef="Activity_ConsumerLoanOrigination" />
+    <bpmn:callActivity id="Activity_MortgageOrigination" name="Mortgage Origination &#38; Processing">
+      <bpmn:extensionElements>
+        <zeebe:calledElement processId="MortgageOriginationProcess" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:callActivity id="Activity_ConsumerLoanOrigination" name="Consumer Loan Origination &#38; Processing">
+      <bpmn:extensionElements>
+        <zeebe:calledElement processId="Process_07kfg8g" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="Gateway_2">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Activity_MortgageOrigination" targetRef="Gateway_2" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Activity_ConsumerLoanOrigination" targetRef="Gateway_2" />
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Gateway_2" targetRef="Activity_CollateralManagement" />
+    <bpmn:callActivity id="Activity_CollateralManagement" name="Title Management">
+      <bpmn:extensionElements>
+        <zeebe:calledElement processId="Process_0v2y3n4" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_7</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="Activity_CollateralManagement" targetRef="Activity_LoanServicing" />
+    <bpmn:callActivity id="Activity_LoanServicing" name="Mortgage &#38; Loan Servicing">
+      <bpmn:extensionElements>
+        <zeebe:calledElement processId="Process_1v9bfpd" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_8</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="Activity_LoanServicing" targetRef="Activity_BillingCollection" />
+    <bpmn:callActivity id="Activity_BillingCollection" name="Billing Collection &#38; Delinquency Management">
+      <bpmn:extensionElements>
+        <zeebe:calledElement processId="Process_0zx63xz" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_9</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="Gateway_3" name="Loan status?">
+      <bpmn:incoming>Flow_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_10</bpmn:outgoing>
+      <bpmn:outgoing>Flow_11</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="Activity_BillingCollection" targetRef="Gateway_3" />
+    <bpmn:sequenceFlow id="Flow_10" name="Closed" sourceRef="Gateway_3" targetRef="Activity_LoanClosure" />
+    <bpmn:callActivity id="Activity_LoanClosure" name="Mortgage &#38; Loan Closure">
+      <bpmn:extensionElements>
+        <zeebe:calledElement processId="LoanClosure" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_12</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:sequenceFlow id="Flow_11" name="Active" sourceRef="Gateway_3" targetRef="Activity_Securitization" />
+    <bpmn:callActivity id="Activity_Securitization" name="Securitization">
+      <bpmn:extensionElements>
+        <zeebe:calledElement processId="Process_028mhtr" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_13</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:endEvent id="Event_LoanClosed" name="Loan closed">
+      <bpmn:incoming>Flow_12</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="Activity_LoanClosure" targetRef="Event_LoanClosed" />
+    <bpmn:endEvent id="Event_LoanSecuritized" name="Loan securitized">
+      <bpmn:incoming>Flow_13</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_13" sourceRef="Activity_Securitization" targetRef="Event_LoanSecuritized" />
+    <bpmn:textAnnotation id="TextAnnotation_1">
+      <bpmn:text>Complies with TILA, RESPA, and HMDA requirements</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1" sourceRef="Activity_MortgageOrigination" targetRef="TextAnnotation_1" />
+    <bpmn:textAnnotation id="TextAnnotation_2">
+      <bpmn:text>Adheres to FCRA guidelines</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_2" sourceRef="Activity_ConsumerLoanOrigination" targetRef="TextAnnotation_2" />
+    <bpmn:textAnnotation id="TextAnnotation_3">
+      <bpmn:text>Follows Dodd-Frank Act regulations</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_3" sourceRef="Activity_LoanServicing" targetRef="TextAnnotation_3" />
+    <bpmn:textAnnotation id="TextAnnotation_4">
+      <bpmn:text>Complies with Fair Debt Collection Practices Act</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_4" sourceRef="Activity_BillingCollection" targetRef="TextAnnotation_4" />
+    <bpmn:textAnnotation id="TextAnnotation_5">
+      <bpmn:text>Ensures compliance with regulatory requirements for loan closure</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_5" sourceRef="Activity_LoanClosure" targetRef="TextAnnotation_5" />
+    <bpmn:textAnnotation id="TextAnnotation_0soun7p">
+      <bpmn:text>DOCUMENTATION ONLY. This process should not be executed to avoid extremely long-running processes. Instead, implement the child processes referenced through call activities</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1hyim52" associationDirection="None" sourceRef="StartEvent_1" targetRef="TextAnnotation_0soun7p" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Process_1uyo2lq">
+    <bpmndi:BPMNPlane id="BPMNPlane_Process_1uyo2lq" bpmnElement="Process_1uyo2lq">
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="57" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1_di" bpmnElement="Gateway_1" isMarkerVisible="true">
+        <dc:Bounds x="200" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_MortgageOrigination_di" bpmnElement="Activity_MortgageOrigination">
+        <dc:Bounds x="325" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ConsumerLoanOrigination_di" bpmnElement="Activity_ConsumerLoanOrigination">
+        <dc:Bounds x="325" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_2_di" bpmnElement="Gateway_2" isMarkerVisible="true">
+        <dc:Bounds x="500" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_CollateralManagement_di" bpmnElement="Activity_CollateralManagement">
+        <dc:Bounds x="625" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_LoanServicing_di" bpmnElement="Activity_LoanServicing">
+        <dc:Bounds x="775" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_BillingCollection_di" bpmnElement="Activity_BillingCollection">
+        <dc:Bounds x="925" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_3_di" bpmnElement="Gateway_3" isMarkerVisible="true">
+        <dc:Bounds x="1100" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_LoanClosure_di" bpmnElement="Activity_LoanClosure">
+        <dc:Bounds x="1225" y="30" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Securitization_di" bpmnElement="Activity_Securitization">
+        <dc:Bounds x="1225" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_LoanClosed_di" bpmnElement="Event_LoanClosed">
+        <dc:Bounds x="1407" y="52" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1395" y="88" width="60" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_LoanSecuritized_di" bpmnElement="Event_LoanSecuritized">
+        <dc:Bounds x="1407" y="192" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_0soun7p_di" bpmnElement="TextAnnotation_0soun7p">
+        <dc:Bounds x="110" y="-60" width="380" height="58" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="93" y="70" />
+        <di:waypoint x="200" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="250" y="70" />
+        <di:waypoint x="325" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="225" y="95" />
+        <di:waypoint x="225" y="210" />
+        <di:waypoint x="325" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <di:waypoint x="425" y="70" />
+        <di:waypoint x="500" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="425" y="210" />
+        <di:waypoint x="525" y="210" />
+        <di:waypoint x="525" y="95" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <di:waypoint x="550" y="70" />
+        <di:waypoint x="625" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <di:waypoint x="725" y="70" />
+        <di:waypoint x="775" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
+        <di:waypoint x="875" y="70" />
+        <di:waypoint x="925" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
+        <di:waypoint x="1025" y="70" />
+        <di:waypoint x="1100" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
+        <di:waypoint x="1150" y="70" />
+        <di:waypoint x="1225" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11">
+        <di:waypoint x="1125" y="95" />
+        <di:waypoint x="1125" y="210" />
+        <di:waypoint x="1225" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12">
+        <di:waypoint x="1325" y="70" />
+        <di:waypoint x="1407" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_13_di" bpmnElement="Flow_13">
+        <di:waypoint x="1325" y="210" />
+        <di:waypoint x="1407" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_1hyim52_di" bpmnElement="Association_1hyim52">
+        <di:waypoint x="84" y="54" />
+        <di:waypoint x="116" y="-2" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

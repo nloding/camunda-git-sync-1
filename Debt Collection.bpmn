@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Web Modeler" exporterVersion="925e751" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.6">
+  <bpmn:process id="Process_0jj2daq" name="Debt Collection" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1" name="Delinquent account identified">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_SendNotification" />
+    <bpmn:sendTask id="Task_SendNotification" name="Send initial notification">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_SendNotification" targetRef="Task_AttemptContact" />
+    <bpmn:userTask id="Task_AttemptContact" name="Attempt contact with borrower">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Task_AttemptContact" targetRef="Gateway_ContactSuccessful" />
+    <bpmn:exclusiveGateway id="Gateway_ContactSuccessful" name="Contact successful?">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_4" name="Yes" sourceRef="Gateway_ContactSuccessful" targetRef="Task_NegotiatePayment" />
+    <bpmn:userTask id="Task_NegotiatePayment" name="Negotiate payment arrangements">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_NegotiatePayment" targetRef="Gateway_ArrangementReached" />
+    <bpmn:exclusiveGateway id="Gateway_ArrangementReached" name="Arrangement reached?">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_7</bpmn:outgoing>
+      <bpmn:outgoing>Flow_8</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_7" name="Yes" sourceRef="Gateway_ArrangementReached" targetRef="CallActivity_PaymentProcessing" />
+    <bpmn:callActivity id="CallActivity_PaymentProcessing" name="Payment Processing">
+      <bpmn:extensionElements>
+        <zeebe:calledElement processId="Process_0g2znsb" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_9</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="CallActivity_PaymentProcessing" targetRef="Gateway_PaymentReceived" />
+    <bpmn:exclusiveGateway id="Gateway_PaymentReceived" name="Payment received?">
+      <bpmn:incoming>Flow_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_10</bpmn:outgoing>
+      <bpmn:outgoing>Flow_11</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_10" name="Yes" sourceRef="Gateway_PaymentReceived" targetRef="EndEvent_1" />
+    <bpmn:endEvent id="EndEvent_1" name="Debt collected">
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_11" name="No" sourceRef="Gateway_PaymentReceived" targetRef="Task_EscalateLegal" />
+    <bpmn:userTask id="Task_EscalateLegal" name="Escalate to legal action">
+      <bpmn:incoming>Flow_11</bpmn:incoming>
+      <bpmn:incoming>Flow_8</bpmn:incoming>
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_12</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_8" name="No" sourceRef="Gateway_ArrangementReached" targetRef="Task_EscalateLegal" />
+    <bpmn:sequenceFlow id="Flow_5" name="No" sourceRef="Gateway_ContactSuccessful" targetRef="Task_EscalateLegal" />
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="Task_EscalateLegal" targetRef="EndEvent_2" />
+    <bpmn:endEvent id="EndEvent_2" name="Legal action initiated">
+      <bpmn:incoming>Flow_12</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:boundaryEvent id="Event_ComplianceReporting" name="Weekly" cancelActivity="false" attachedToRef="Task_EscalateLegal">
+      <bpmn:outgoing>Flow_13</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_13" sourceRef="Event_ComplianceReporting" targetRef="CallActivity_RegulatoryCompliance" />
+    <bpmn:callActivity id="CallActivity_RegulatoryCompliance" name="Regulatory Compliance Reporting">
+      <bpmn:extensionElements>
+        <zeebe:calledElement processId="Process_0e7tlam" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_13</bpmn:incoming>
+      <bpmn:outgoing>Flow_14</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:endEvent id="EndEvent_3" name="Compliance report submitted">
+      <bpmn:incoming>Flow_14</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_14" sourceRef="CallActivity_RegulatoryCompliance" targetRef="EndEvent_3" />
+    <bpmn:textAnnotation id="TextAnnotation_1">
+      <bpmn:text>FDCPA: Ensure proper disclosure and avoid unfair practices</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1" sourceRef="Task_SendNotification" targetRef="TextAnnotation_1" />
+    <bpmn:textAnnotation id="TextAnnotation_2">
+      <bpmn:text>FDCPA: Respect time and place restrictions for contact</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_2" sourceRef="Task_AttemptContact" targetRef="TextAnnotation_2" />
+    <bpmn:textAnnotation id="TextAnnotation_3">
+      <bpmn:text>FCBA: Provide written notice of debt within 30 days</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_3" sourceRef="Task_SendNotification" targetRef="TextAnnotation_3" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Process_0jj2daq">
+    <bpmndi:BPMNPlane id="BPMNPlane_Process_0jj2daq" bpmnElement="Process_0jj2daq">
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="57" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendNotification_di" bpmnElement="Task_SendNotification">
+        <dc:Bounds x="175" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AttemptContact_di" bpmnElement="Task_AttemptContact">
+        <dc:Bounds x="325" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ContactSuccessful_di" bpmnElement="Gateway_ContactSuccessful" isMarkerVisible="true">
+        <dc:Bounds x="500" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NegotiatePayment_di" bpmnElement="Task_NegotiatePayment">
+        <dc:Bounds x="625" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ArrangementReached_di" bpmnElement="Gateway_ArrangementReached" isMarkerVisible="true">
+        <dc:Bounds x="800" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CallActivity_PaymentProcessing_di" bpmnElement="CallActivity_PaymentProcessing">
+        <dc:Bounds x="925" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_PaymentReceived_di" bpmnElement="Gateway_PaymentReceived" isMarkerVisible="true">
+        <dc:Bounds x="1100" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1_di" bpmnElement="EndEvent_1">
+        <dc:Bounds x="1257" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EscalateLegal_di" bpmnElement="Task_EscalateLegal">
+        <dc:Bounds x="1225" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_2_di" bpmnElement="EndEvent_2">
+        <dc:Bounds x="1407" y="192" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CallActivity_RegulatoryCompliance_di" bpmnElement="CallActivity_RegulatoryCompliance">
+        <dc:Bounds x="1375" y="310" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_3_di" bpmnElement="EndEvent_3">
+        <dc:Bounds x="1557" y="332" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ComplianceReporting_di" bpmnElement="Event_ComplianceReporting">
+        <dc:Bounds x="1257" y="232" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="93" y="70" />
+        <di:waypoint x="175" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="275" y="70" />
+        <di:waypoint x="325" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="425" y="70" />
+        <di:waypoint x="500" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <di:waypoint x="550" y="70" />
+        <di:waypoint x="625" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <di:waypoint x="725" y="70" />
+        <di:waypoint x="800" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <di:waypoint x="850" y="70" />
+        <di:waypoint x="925" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
+        <di:waypoint x="1025" y="70" />
+        <di:waypoint x="1100" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
+        <di:waypoint x="1150" y="70" />
+        <di:waypoint x="1257" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11">
+        <di:waypoint x="1125" y="95" />
+        <di:waypoint x="1125" y="210" />
+        <di:waypoint x="1225" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
+        <di:waypoint x="825" y="95" />
+        <di:waypoint x="825" y="210" />
+        <di:waypoint x="1225" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="525" y="95" />
+        <di:waypoint x="525" y="210" />
+        <di:waypoint x="1225" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12">
+        <di:waypoint x="1325" y="210" />
+        <di:waypoint x="1407" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_13_di" bpmnElement="Flow_13">
+        <di:waypoint x="1275" y="268" />
+        <di:waypoint x="1275" y="350" />
+        <di:waypoint x="1375" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_14_di" bpmnElement="Flow_14">
+        <di:waypoint x="1475" y="350" />
+        <di:waypoint x="1557" y="350" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

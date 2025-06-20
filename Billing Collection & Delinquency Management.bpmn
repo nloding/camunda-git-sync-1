@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Web Modeler" exporterVersion="ef3429c" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.6">
+  <bpmn:process id="Process_0zx63xz" name="Billing Collection &#38; Delinquency Management" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1" name="Billing cycle initiated">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_GenerateBill" />
+    <bpmn:userTask id="Task_GenerateBill" name="Generate and send bill">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_GenerateBill" targetRef="Gateway_PaymentReceived" />
+    <bpmn:eventBasedGateway id="Gateway_PaymentReceived" name="Payment received?">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:eventBasedGateway>
+    <bpmn:intermediateCatchEvent id="Event_PaymentReceived" name="Payment received">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Gateway_PaymentReceived" targetRef="Event_PaymentReceived" />
+    <bpmn:intermediateCatchEvent id="Event_PaymentDue" name="Payment due date reached">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Gateway_PaymentReceived" targetRef="Event_PaymentDue" />
+    <bpmn:callActivity id="Activity_PaymentProcessing" name="Payment Processing">
+      <bpmn:extensionElements>
+        <zeebe:calledElement processId="Process_0g2znsb" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_7</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Event_PaymentReceived" targetRef="Activity_PaymentProcessing" />
+    <bpmn:exclusiveGateway id="Gateway_AccountStatus" name="Account status?">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_8</bpmn:outgoing>
+      <bpmn:outgoing>Flow_9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Event_PaymentDue" targetRef="Gateway_AccountStatus" />
+    <bpmn:sequenceFlow id="Flow_8" name="Delinquent" sourceRef="Gateway_AccountStatus" targetRef="Task_SendLateNotice" />
+    <bpmn:userTask id="Task_SendLateNotice" name="Send late payment notice">
+      <bpmn:incoming>Flow_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_10</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_9" name="Severely delinquent" sourceRef="Gateway_AccountStatus" targetRef="Activity_DebtCollection" />
+    <bpmn:callActivity id="Activity_DebtCollection" name="Debt Collection">
+      <bpmn:extensionElements>
+        <zeebe:calledElement processId="Process_0jj2daq" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_11</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="Gateway_CollectionResult" name="Collection result?">
+      <bpmn:incoming>Flow_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_12</bpmn:outgoing>
+      <bpmn:outgoing>Flow_13</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Activity_DebtCollection" targetRef="Gateway_CollectionResult" />
+    <bpmn:sequenceFlow id="Flow_12" name="Successful" sourceRef="Gateway_CollectionResult" targetRef="Activity_PaymentProcessing" />
+    <bpmn:sequenceFlow id="Flow_13" name="Unsuccessful" sourceRef="Gateway_CollectionResult" targetRef="Task_InitiateForeclosure" />
+    <bpmn:userTask id="Task_InitiateForeclosure" name="Initiate foreclosure process">
+      <bpmn:incoming>Flow_13</bpmn:incoming>
+      <bpmn:outgoing>Flow_14</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Task_SendLateNotice" targetRef="Gateway_LatePaymentResponse" />
+    <bpmn:eventBasedGateway id="Gateway_LatePaymentResponse" name="Late payment response?">
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_15</bpmn:outgoing>
+      <bpmn:outgoing>Flow_16</bpmn:outgoing>
+    </bpmn:eventBasedGateway>
+    <bpmn:intermediateCatchEvent id="Event_LatePaymentReceived" name="Late payment received">
+      <bpmn:incoming>Flow_15</bpmn:incoming>
+      <bpmn:outgoing>Flow_17</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_2" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_15" sourceRef="Gateway_LatePaymentResponse" targetRef="Event_LatePaymentReceived" />
+    <bpmn:intermediateCatchEvent id="Event_GracePeriodExpired" name="Grace period expired">
+      <bpmn:incoming>Flow_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_18</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_2" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_16" sourceRef="Gateway_LatePaymentResponse" targetRef="Event_GracePeriodExpired" />
+    <bpmn:sequenceFlow id="Flow_17" sourceRef="Event_LatePaymentReceived" targetRef="Activity_PaymentProcessing" />
+    <bpmn:sequenceFlow id="Flow_18" sourceRef="Event_GracePeriodExpired" targetRef="Activity_DebtCollection" />
+    <bpmn:endEvent id="Event_ProcessEnd" name="Billing cycle completed">
+      <bpmn:incoming>Flow_7</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="Activity_PaymentProcessing" targetRef="Event_ProcessEnd" />
+    <bpmn:boundaryEvent id="Event_ComplianceCheck" name="Monthly compliance check" cancelActivity="false" attachedToRef="Activity_PaymentProcessing">
+      <bpmn:outgoing>Flow_19</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_3" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_19" sourceRef="Event_ComplianceCheck" targetRef="Activity_RegulatoryCompliance" />
+    <bpmn:callActivity id="Activity_RegulatoryCompliance" name="Regulatory Compliance Reporting">
+      <bpmn:extensionElements>
+        <zeebe:calledElement processId="Process_0e7tlam" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_19</bpmn:incoming>
+      <bpmn:outgoing>Flow_20</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:endEvent id="Event_ComplianceReported" name="Compliance reported">
+      <bpmn:incoming>Flow_20</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_20" sourceRef="Activity_RegulatoryCompliance" targetRef="Event_ComplianceReported" />
+    <bpmn:endEvent id="Event_ForeclosureInitiated" name="Foreclosure initiated">
+      <bpmn:incoming>Flow_14</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_14" sourceRef="Task_InitiateForeclosure" targetRef="Event_ForeclosureInitiated" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Process_0zx63xz">
+    <bpmndi:BPMNPlane id="BPMNPlane_Process_0zx63xz" bpmnElement="Process_0zx63xz">
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="57" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_GenerateBill_di" bpmnElement="Task_GenerateBill">
+        <dc:Bounds x="175" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_PaymentReceived_di" bpmnElement="Gateway_PaymentReceived">
+        <dc:Bounds x="350" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_PaymentReceived_di" bpmnElement="Event_PaymentReceived">
+        <dc:Bounds x="507" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_PaymentDue_di" bpmnElement="Event_PaymentDue">
+        <dc:Bounds x="507" y="192" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_PaymentProcessing_di" bpmnElement="Activity_PaymentProcessing">
+        <dc:Bounds x="625" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_AccountStatus_di" bpmnElement="Gateway_AccountStatus" isMarkerVisible="true">
+        <dc:Bounds x="650" y="185" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendLateNotice_di" bpmnElement="Task_SendLateNotice">
+        <dc:Bounds x="775" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_DebtCollection_di" bpmnElement="Activity_DebtCollection">
+        <dc:Bounds x="775" y="310" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CollectionResult_di" bpmnElement="Gateway_CollectionResult" isMarkerVisible="true">
+        <dc:Bounds x="950" y="325" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_InitiateForeclosure_di" bpmnElement="Task_InitiateForeclosure">
+        <dc:Bounds x="1075" y="310" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_LatePaymentResponse_di" bpmnElement="Gateway_LatePaymentResponse">
+        <dc:Bounds x="950" y="185" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_LatePaymentReceived_di" bpmnElement="Event_LatePaymentReceived">
+        <dc:Bounds x="1107" y="192" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1091" y="154.5" width="67" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_GracePeriodExpired_di" bpmnElement="Event_GracePeriodExpired">
+        <dc:Bounds x="1557" y="332" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ProcessEnd_di" bpmnElement="Event_ProcessEnd">
+        <dc:Bounds x="807" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_RegulatoryCompliance_di" bpmnElement="Activity_RegulatoryCompliance">
+        <dc:Bounds x="1375" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ComplianceReported_di" bpmnElement="Event_ComplianceReported">
+        <dc:Bounds x="1557" y="192" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ForeclosureInitiated_di" bpmnElement="Event_ForeclosureInitiated">
+        <dc:Bounds x="1257" y="332" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ComplianceCheck_di" bpmnElement="Event_ComplianceCheck">
+        <dc:Bounds x="657" y="92" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="93" y="70" />
+        <di:waypoint x="175" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="275" y="70" />
+        <di:waypoint x="350" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="400" y="70" />
+        <di:waypoint x="507" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <di:waypoint x="375" y="95" />
+        <di:waypoint x="375" y="210" />
+        <di:waypoint x="507" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="543" y="70" />
+        <di:waypoint x="625" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <di:waypoint x="543" y="210" />
+        <di:waypoint x="650" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
+        <di:waypoint x="700" y="210" />
+        <di:waypoint x="775" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
+        <di:waypoint x="675" y="235" />
+        <di:waypoint x="675" y="350" />
+        <di:waypoint x="775" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11">
+        <di:waypoint x="875" y="350" />
+        <di:waypoint x="950" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12">
+        <di:waypoint x="975" y="375" />
+        <di:waypoint x="975" y="420" />
+        <di:waypoint x="675" y="420" />
+        <di:waypoint x="675" y="110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_13_di" bpmnElement="Flow_13">
+        <di:waypoint x="1000" y="350" />
+        <di:waypoint x="1075" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
+        <di:waypoint x="875" y="210" />
+        <di:waypoint x="950" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15_di" bpmnElement="Flow_15">
+        <di:waypoint x="1000" y="210" />
+        <di:waypoint x="1107" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_16_di" bpmnElement="Flow_16">
+        <di:waypoint x="1000" y="210" />
+        <di:waypoint x="1050" y="210" />
+        <di:waypoint x="1050" y="280" />
+        <di:waypoint x="1500" y="280" />
+        <di:waypoint x="1500" y="350" />
+        <di:waypoint x="1557" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_17_di" bpmnElement="Flow_17">
+        <di:waypoint x="1125" y="228" />
+        <di:waypoint x="1125" y="280" />
+        <di:waypoint x="600" y="280" />
+        <di:waypoint x="600" y="70" />
+        <di:waypoint x="625" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_18_di" bpmnElement="Flow_18">
+        <di:waypoint x="1575" y="368" />
+        <di:waypoint x="1575" y="420" />
+        <di:waypoint x="825" y="420" />
+        <di:waypoint x="825" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <di:waypoint x="725" y="70" />
+        <di:waypoint x="807" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_19_di" bpmnElement="Flow_19">
+        <di:waypoint x="675" y="128" />
+        <di:waypoint x="675" y="140" />
+        <di:waypoint x="750" y="140" />
+        <di:waypoint x="750" y="110" />
+        <di:waypoint x="750" y="140" />
+        <di:waypoint x="1350" y="140" />
+        <di:waypoint x="1350" y="210" />
+        <di:waypoint x="1375" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_20_di" bpmnElement="Flow_20">
+        <di:waypoint x="1475" y="210" />
+        <di:waypoint x="1557" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_14_di" bpmnElement="Flow_14">
+        <di:waypoint x="1175" y="350" />
+        <di:waypoint x="1257" y="350" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

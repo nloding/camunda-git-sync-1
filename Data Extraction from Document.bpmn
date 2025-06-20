@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Web Modeler" exporterVersion="925e751" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.6">
+  <bpmn:process id="Process_DataExtractionFromDocument" name="Data Extraction from Document" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1" name="Document received">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_IdentifyDocumentType" />
+    <bpmn:userTask id="Task_IdentifyDocumentType" name="Identify document type">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_IdentifyDocumentType" targetRef="Task_ReviewDocument" />
+    <bpmn:userTask id="Task_ReviewDocument" name="Review document for completeness">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Task_ReviewDocument" targetRef="Gateway_1" />
+    <bpmn:exclusiveGateway id="Gateway_1" name="Document complete?">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_4" name="Yes" sourceRef="Gateway_1" targetRef="Task_ExtractData" />
+    <bpmn:sequenceFlow id="Flow_5" name="No" sourceRef="Gateway_1" targetRef="Task_RequestAdditionalInfo" />
+    <bpmn:userTask id="Task_RequestAdditionalInfo" name="Request additional information">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_RequestAdditionalInfo" targetRef="Event_InfoReceived" />
+    <bpmn:intermediateCatchEvent id="Event_InfoReceived" name="Additional information received">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_7</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="Event_InfoReceived" targetRef="Task_ReviewDocument" />
+    <bpmn:userTask id="Task_ExtractData" name="Extract relevant data">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="Task_ExtractData" targetRef="Task_VerifyData" />
+    <bpmn:userTask id="Task_VerifyData" name="Verify extracted data">
+      <bpmn:incoming>Flow_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_9</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="Task_VerifyData" targetRef="Task_StoreData" />
+    <bpmn:serviceTask id="Task_StoreData" name="Store verified data">
+      <bpmn:incoming>Flow_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_10</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_1" name="Data extraction completed">
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Task_StoreData" targetRef="EndEvent_1" />
+    <bpmn:textAnnotation id="TextAnnotation_1">
+      <bpmn:text>RESPA Compliance: Ensure timely processing within 30 days</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1" sourceRef="Task_ExtractData" targetRef="TextAnnotation_1" />
+    <bpmn:textAnnotation id="TextAnnotation_2">
+      <bpmn:text>RESPA Compliance: Notify borrower within 5 days if additional information is needed</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_2" sourceRef="Task_RequestAdditionalInfo" targetRef="TextAnnotation_2" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Process_DataExtractionFromDocument">
+    <bpmndi:BPMNPlane id="BPMNPlane_Process_DataExtractionFromDocument" bpmnElement="Process_DataExtractionFromDocument">
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="57" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_IdentifyDocumentType_di" bpmnElement="Task_IdentifyDocumentType">
+        <dc:Bounds x="175" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReviewDocument_di" bpmnElement="Task_ReviewDocument">
+        <dc:Bounds x="325" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1_di" bpmnElement="Gateway_1" isMarkerVisible="true">
+        <dc:Bounds x="500" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RequestAdditionalInfo_di" bpmnElement="Task_RequestAdditionalInfo">
+        <dc:Bounds x="625" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_InfoReceived_di" bpmnElement="Event_InfoReceived">
+        <dc:Bounds x="807" y="192" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ExtractData_di" bpmnElement="Task_ExtractData">
+        <dc:Bounds x="625" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_VerifyData_di" bpmnElement="Task_VerifyData">
+        <dc:Bounds x="775" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_StoreData_di" bpmnElement="Task_StoreData">
+        <dc:Bounds x="925" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1_di" bpmnElement="EndEvent_1">
+        <dc:Bounds x="1107" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="93" y="70" />
+        <di:waypoint x="175" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="275" y="70" />
+        <di:waypoint x="325" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="425" y="70" />
+        <di:waypoint x="500" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <di:waypoint x="550" y="70" />
+        <di:waypoint x="625" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="525" y="95" />
+        <di:waypoint x="525" y="210" />
+        <di:waypoint x="625" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <di:waypoint x="725" y="210" />
+        <di:waypoint x="807" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <di:waypoint x="825" y="228" />
+        <di:waypoint x="825" y="280" />
+        <di:waypoint x="375" y="280" />
+        <di:waypoint x="375" y="110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
+        <di:waypoint x="725" y="70" />
+        <di:waypoint x="775" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
+        <di:waypoint x="875" y="70" />
+        <di:waypoint x="925" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
+        <di:waypoint x="1025" y="70" />
+        <di:waypoint x="1107" y="70" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

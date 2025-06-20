@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Web Modeler" exporterVersion="925e751" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.6">
+  <bpmn:process id="MortgageOriginationProcess" name="Mortgage Origination &#38; Processing" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1" name="Loan application received">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_InitialScreening" />
+    <bpmn:userTask id="Task_InitialScreening" name="Perform initial screening">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_InitialScreening" targetRef="Gateway_InitialApproval" />
+    <bpmn:exclusiveGateway id="Gateway_InitialApproval" name="Initial approval?">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_3" name="Yes" sourceRef="Gateway_InitialApproval" targetRef="Task_CollectDocuments" />
+    <bpmn:userTask id="Task_CollectDocuments" name="Collect required documents">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Task_CollectDocuments" targetRef="Task_VerifyDocuments" />
+    <bpmn:userTask id="Task_VerifyDocuments" name="Verify documents">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_VerifyDocuments" targetRef="Task_OrderAppraisal" />
+    <bpmn:serviceTask id="Task_OrderAppraisal" name="Order property appraisal">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="Task_OrderAppraisal" targetRef="CallActivity_Underwriting" />
+    <bpmn:callActivity id="CallActivity_Underwriting" name="Underwriting">
+      <bpmn:extensionElements>
+        <zeebe:calledElement processId="Process_0wvxtg9" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_8</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="CallActivity_Underwriting" targetRef="Gateway_FinalApproval" />
+    <bpmn:exclusiveGateway id="Gateway_FinalApproval" name="Final approval?">
+      <bpmn:incoming>Flow_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_9</bpmn:outgoing>
+      <bpmn:outgoing>Flow_10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_9" name="Yes" sourceRef="Gateway_FinalApproval" targetRef="Task_PrepareClosingDocuments" />
+    <bpmn:userTask id="Task_PrepareClosingDocuments" name="Prepare closing documents">
+      <bpmn:incoming>Flow_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_11</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Task_PrepareClosingDocuments" targetRef="Task_ScheduleClosing" />
+    <bpmn:userTask id="Task_ScheduleClosing" name="Schedule closing">
+      <bpmn:incoming>Flow_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_12</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="Task_ScheduleClosing" targetRef="Task_ConductClosing" />
+    <bpmn:userTask id="Task_ConductClosing" name="Conduct closing">
+      <bpmn:incoming>Flow_12</bpmn:incoming>
+      <bpmn:outgoing>Flow_13</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_13" sourceRef="Task_ConductClosing" targetRef="EndEvent_LoanClosed" />
+    <bpmn:endEvent id="EndEvent_LoanClosed" name="Loan closed">
+      <bpmn:incoming>Flow_13</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_4" name="No" sourceRef="Gateway_InitialApproval" targetRef="Task_NotifyRejection" />
+    <bpmn:sequenceFlow id="Flow_10" name="No" sourceRef="Gateway_FinalApproval" targetRef="Task_NotifyRejection" />
+    <bpmn:userTask id="Task_NotifyRejection" name="Notify applicant of rejection">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_14</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EndEvent_ApplicationRejected" name="Application rejected">
+      <bpmn:incoming>Flow_14</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_14" sourceRef="Task_NotifyRejection" targetRef="EndEvent_ApplicationRejected" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_MortgageOriginationProcess">
+    <bpmndi:BPMNPlane id="BPMNPlane_MortgageOriginationProcess" bpmnElement="MortgageOriginationProcess">
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="57" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_InitialScreening_di" bpmnElement="Task_InitialScreening">
+        <dc:Bounds x="175" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_InitialApproval_di" bpmnElement="Gateway_InitialApproval" isMarkerVisible="true">
+        <dc:Bounds x="350" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CollectDocuments_di" bpmnElement="Task_CollectDocuments">
+        <dc:Bounds x="475" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_VerifyDocuments_di" bpmnElement="Task_VerifyDocuments">
+        <dc:Bounds x="625" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_OrderAppraisal_di" bpmnElement="Task_OrderAppraisal">
+        <dc:Bounds x="775" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CallActivity_Underwriting_di" bpmnElement="CallActivity_Underwriting">
+        <dc:Bounds x="925" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_FinalApproval_di" bpmnElement="Gateway_FinalApproval" isMarkerVisible="true">
+        <dc:Bounds x="1100" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PrepareClosingDocuments_di" bpmnElement="Task_PrepareClosingDocuments">
+        <dc:Bounds x="1225" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ScheduleClosing_di" bpmnElement="Task_ScheduleClosing">
+        <dc:Bounds x="1375" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ConductClosing_di" bpmnElement="Task_ConductClosing">
+        <dc:Bounds x="1525" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_LoanClosed_di" bpmnElement="EndEvent_LoanClosed">
+        <dc:Bounds x="1707" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyRejection_di" bpmnElement="Task_NotifyRejection">
+        <dc:Bounds x="1225" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_ApplicationRejected_di" bpmnElement="EndEvent_ApplicationRejected">
+        <dc:Bounds x="1407" y="192" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="93" y="70" />
+        <di:waypoint x="175" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="275" y="70" />
+        <di:waypoint x="350" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="400" y="70" />
+        <di:waypoint x="475" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="575" y="70" />
+        <di:waypoint x="625" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <di:waypoint x="725" y="70" />
+        <di:waypoint x="775" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <di:waypoint x="875" y="70" />
+        <di:waypoint x="925" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
+        <di:waypoint x="1025" y="70" />
+        <di:waypoint x="1100" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
+        <di:waypoint x="1150" y="70" />
+        <di:waypoint x="1225" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11">
+        <di:waypoint x="1325" y="70" />
+        <di:waypoint x="1375" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12">
+        <di:waypoint x="1475" y="70" />
+        <di:waypoint x="1525" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_13_di" bpmnElement="Flow_13">
+        <di:waypoint x="1625" y="70" />
+        <di:waypoint x="1707" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <di:waypoint x="375" y="95" />
+        <di:waypoint x="375" y="210" />
+        <di:waypoint x="1225" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
+        <di:waypoint x="1125" y="95" />
+        <di:waypoint x="1125" y="210" />
+        <di:waypoint x="1225" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_14_di" bpmnElement="Flow_14">
+        <di:waypoint x="1325" y="210" />
+        <di:waypoint x="1407" y="210" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
